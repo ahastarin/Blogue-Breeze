@@ -16,6 +16,9 @@ class ArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+     use TagHelper;
+     
     public function index()
     {
         return view('article.index', [
@@ -51,25 +54,7 @@ class ArticleController extends Controller
             "image" => $image
         ]);
         
-        // create tag
-        $tags = explode(",",$request->tags);
-
-        foreach( $tags as $tag){
-            if(!Tag::where('name', $tag)->exists()){
-                Tag::create([
-                    "name" => $tag
-                ]);
-            }
-        }
-
-        // get tag id
-        $tagIds = Tag::whereIn("name", $tags)->get()->toArray();
-
-        // attach to pivot table article and tag
-        foreach($tagIds as $tagId) {
-            $article->tags()->attach($tagId["id"]);
-        }          
-
+        TagHelper::create($request, $article);
 
         return redirect('/dashboard/article');
     }
@@ -120,7 +105,7 @@ class ArticleController extends Controller
         ]);   
 
          // menangani tag
-         TagHelper::handle($request, $id);  
+         TagHelper::update($request, $id);  
         
          return redirect("/delete-unused-tags");
     }
