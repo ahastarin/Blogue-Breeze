@@ -57,16 +57,12 @@
 
                         <label for="Tags" class="block mb-2 text-sm font-large text-gray-900">Tags : </label>
 
-                        <div id="tags-container">
-                            
-                        </div>
-                        <input type="text" id="tagInput" class="border border-gray-300 text-gray-900text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-25 inline" value="{{ $article->tags->implode('name', ',') }}">
+                        <div id="tags-container" onclick="addTag()"></div>
+                        <br>
+                        <input type="text" id="tagInput" onchange="addTag()" class="border border-gray-300 text-gray-900text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-25 inline" value="{{ $article->tags->implode('name', ',') }}">
 
                         {{-- pass tags to laravel --}}
                         <input type="hidden" id="tags" name="tags">
-
-                        <button type="button" onclick="addTag()" class="text-white bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Add Tag</button>
-                        <br>
 
                         {{-- endtags --}}
                         
@@ -76,9 +72,11 @@
                 </div>
             </div>
         </div>
+
     </div>
     <script>
-            var loadFile = function(event) {
+        // function untuk preview image
+        var loadFile = function(event) {
             var output = document.getElementById('preview');
             output.src = URL.createObjectURL(event.target.files[0]);
             output.onload = function() {
@@ -86,39 +84,86 @@
             }
         };
 
+        // Manajemen Tag
+
+        const tagInput = document.getElementById("tagInput");
+        const tagContainer = document.getElementById('tags-container');
+        let tags = document.getElementById('tags');
+
+        let tagValue = [];
+
+        // add tag to tag container
+        function addTag(e) {
+                const tag = document.createElement('span');
+                tag.className = 'tag bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900  dark:text-blue-300';
+                if(e != undefined){
+                    tag.textContent = e;
+                    tagContainer.appendChild(tag);
+                }
+
+                // delete tag
+                tag.addEventListener("click", function() {
+                    tagContainer.removeChild(tag);
+          
+                    // remove array that deleted from tagValue
+                    var filteredArray = tagValue.filter(e => e !== tag.textContent)
+                    tagValue = filteredArray;
+                    tags.value = tagValue;
+                });
+
+                console.log(tags.value);
+        }
+
+        // jika tidak ada tambahan tag, tambahkan value sebelumnya
+        if(tagInput.value !== null) {
+            oldTag = tagInput.value.split(",");
+            
+            oldTag.forEach(e => {
+                addTag(e);
+                tagValue.push(e);
+            });
+            
+            tagInput.value = '';
+            tags.value = tagValue;
+        }
+
+        // jika ada input baru tambahkan ke tag container
+        $("#tagInput").on('keyup', function(e) {
+            let tag = tagInput.value;
+            var pattern = new RegExp(/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/);
+
+            if(e.which == 188  && tag.slice(0,-1) != "") {
+                // make sure value before comma is not symbol
+                if(pattern.test(tag.slice(0,-1))){
+                    tagInput.value = '';
+                    return false;
+                };
+
+                // if value not ready in tagValue
+                if(!tagValue.includes(tag.slice(0,-1))){
+
+                    addTag(tag.slice(0,-1));
+                    tagValue.push(tag.slice(0,-1));
+                    tagInput.value = '';
+
+                    tags.value = tagValue;
+                    // console.log(tags.value);
+
+                } else {
+                    tagInput.value = '';
+                }
+            }
+        });
         
-    let tagValue = [];
-
-    function addTag() {
-      const tagInput = document.getElementById('tagInput');
-      const tagContainer = document.getElementById('tags-container');
-      const tags = document.getElementById('tags');
-
-      if (tagInput.value.trim() !== '') {
-
-        const tag = document.createElement('span');
-        
-        tag.className = 'tag bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300';
-        tagContainer.className = 'my-2';
-        tag.textContent = tagInput.value.trim();
-        
-        tagValue.push(tag.textContent);
-
-        // delete tag
-        tag.addEventListener('click', function() {
-          tagContainer.removeChild(tag);
-          // remove array that deleted from tagValue
-          var filteredArray = tagValue.filter(e => e !== tag.textContent)
-          tagValue = filteredArray;
-          tags.value = tagValue;
+        // disable enter to submit form
+        $(document).ready(function() {
+            $(window).keydown(function(event){
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+            });
         });
 
-        tagContainer.appendChild(tag);
-        tagInput.value = '';
-
-        //add tags value
-        tags.value = tagValue;
-      }
-    }
     </script>
 </x-app-layout>

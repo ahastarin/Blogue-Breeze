@@ -92,6 +92,7 @@
         // delete tag
         tag.addEventListener('click', function() {
           tagContainer.removeChild(tag);
+          
           // remove array that deleted from tagValue
           var filteredArray = tagValue.filter(e => e !== tag.textContent)
           tagValue = filteredArray;

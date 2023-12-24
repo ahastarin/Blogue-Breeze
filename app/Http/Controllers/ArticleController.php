@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tag;
 use App\Models\Article;
 use App\Models\Category;
+use App\Helpers\TagHelper;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
@@ -99,6 +100,7 @@ class ArticleController extends Controller
      */
     public function update(UpdateArticleRequest $request, $id)
     {
+        // menangani image
         $image = null;
         if(!$request->hasFile('image')){
             $image = $request->oldImage;
@@ -108,16 +110,19 @@ class ArticleController extends Controller
             $image = $request->file('image')->storeAs('image', bin2hex($bytes) . "." . $extension, 'public');
         }
         
-        Article::where("id", $id)->update([
+        // update article
+         Article::where("id", $id)->update([
             "title" => $request->title,
             "user_id" => $request->user()->id,
             "category_id" => $request->category,
             "content" => $request->content,
             "image" => $image
         ]);   
-        
 
-        return redirect('/dashboard/article');
+         // menangani tag
+         TagHelper::handle($request, $id);  
+        
+         return redirect("/delete-unused-tags");
     }
 
     /**
